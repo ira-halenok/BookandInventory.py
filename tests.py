@@ -61,7 +61,7 @@ class Test_Inventory (unittest.TestCase):
         with self.assertRaises(TypeError):
             inventory.add_item(BOOK_TITLES[0])
 
-    def test_inventory_fet_xml_tree(self):
+    def test_inventory_get_xml_tree(self):
         books = [
             Book(BOOK_TITLES[1], AUTHORS[0]),
             Book(BOOK_TITLES[0], AUTHORS[0]),
@@ -100,16 +100,6 @@ class Test_Inventory (unittest.TestCase):
         # assert
         self.assertEqual(len(expected_inventory.inventory_items), len(loaded_inventory.inventory_items))
         self.assertEqual(expected_inventory.inventory_items, loaded_inventory.inventory_items)
-
-    def test_remove_item_empty_inventory(self):
-        # arrange
-        inventory = Inventory(items=[])
-
-        # act
-        inventory.remove_item(TEST_UUIDS[0])
-
-        # assert
-        self.assertEqual(len(inventory.inventory_items), 0)
 
     @mock.patch('uuid.uuid4', generate_uuid)
     def test_remove_item_filled_inventory(self):
