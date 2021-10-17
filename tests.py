@@ -1,6 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Oct 9 11:42:06 2021
+
+@author: Iryna Halenok
+"""
+
+
 import unittest
 import uuid
-from book_inventory import *
+from inventory import Inventory
+from book import InventoryItem, Book
 from unittest import mock
 import xml.etree.ElementTree as ETree
 
@@ -23,7 +32,7 @@ class Test_Inventory (unittest.TestCase):
         invent_item = InventoryItem("Inventory Item Test")
         self.assertEqual(invent_item_name, str(invent_item))
 
-    def test_inventory_item_str(self):
+    def test_inventory_item_repr(self):
         invent_item_name = "Inventory Item Test"
         invent_item = InventoryItem(invent_item_name, TEST_UUIDS[3])
         self.assertEqual(f"InventoryItem({TEST_UUIDS[3]},{invent_item.name})", repr(invent_item))
@@ -46,28 +55,20 @@ class Test_Inventory (unittest.TestCase):
     def test_book_str_filled_author(self):
         new_book = Book(BOOK_TITLES[0], AUTHORS[0])
         self.assertEqual(str(new_book), "Harry Potter and the Order of the Phoenix by J. K. Rowling")
-
-    def test_inventory_add_valid_item_true(self):
-        inventory = Inventory()
-        new_book = Book(BOOK_TITLES[0], AUTHORS[0])
-        inventory.add_item(new_book)
-        self.assertEqual(len(inventory.inventory_items), 1)
     
     def test_inventory_add_invalid_item(self):
-        inventory = Inventory()
+        inventory = Inventory(items=[])
         with self.assertRaises(TypeError):
             inventory.add_item(BOOK_TITLES[0])
 
-    def test_inventory_save_to_file(self):
+    def test_inventory_fet_xml_tree(self):
         books = [
             Book(BOOK_TITLES[1], AUTHORS[0]),
             Book(BOOK_TITLES[0], AUTHORS[0]),
             Book(BOOK_TITLES[2])
         ]
         
-        inventory = Inventory()
-        for book in books:
-            inventory.add_item(book)
+        inventory = Inventory(items=books)
         
         expected_tree = ETree.parse('expected_result.xml')
 
@@ -91,19 +92,18 @@ class Test_Inventory (unittest.TestCase):
             Book(BOOK_TITLES[2])
         ]
         
-        expected_inventory = Inventory()
-        for book in books:
-            expected_inventory.add_item(book)
+        expected_inventory = Inventory(items=books)
 
         # act
         loaded_inventory = Inventory.load_from_xml("valid_items.xml")
 
         # assert
+        self.assertEqual(len(expected_inventory.inventory_items), len(loaded_inventory.inventory_items))
         self.assertEqual(expected_inventory.inventory_items, loaded_inventory.inventory_items)
 
     def test_remove_item_empty_inventory(self):
         # arrange
-        inventory = Inventory()
+        inventory = Inventory(items=[])
 
         # act
         inventory.remove_item(TEST_UUIDS[0])
@@ -115,8 +115,7 @@ class Test_Inventory (unittest.TestCase):
     def test_remove_item_filled_inventory(self):
         # arrange
         patched_uuid = TEST_UUIDS[1]
-        inventory = Inventory()
-        inventory.add_item(Book(BOOK_TITLES[0], AUTHORS[0]))
+        inventory = Inventory(items=[Book(BOOK_TITLES[0], AUTHORS[0])])
 
         # act
         inventory.remove_item(patched_uuid)
@@ -127,14 +126,23 @@ class Test_Inventory (unittest.TestCase):
     @mock.patch('uuid.uuid4', generate_uuid)
     def test_remove_non_existing_item_inventory(self):
         # arrange
-        inventory = Inventory()
-        inventory.add_item(Book(BOOK_TITLES[0], AUTHORS[0]))
+        inventory = Inventory(items=[Book(BOOK_TITLES[0], AUTHORS[0])])
 
         # act
         inventory.remove_item("c0fdb14b-c984-4770-99b0-8b3d98e7aca7")
 
         # assert
         self.assertEqual(len(inventory.inventory_items), 1)
+
+    def test_search_by_author(self):
+        # arrange
+        inventory = Inventory(items=[Book(BOOK_TITLES[0], AUTHORS[0]), Book(BOOK_TITLES[2])])
+        
+        #act
+        actual = inventory.search_by_author(AUTHORS[0])
+
+        self.assertEqual(actual, [Book(BOOK_TITLES[0], AUTHORS[0])])
+
 
     def remove_uuid_from_xml(self, xml_tree):
         for elem in xml_tree.iter():

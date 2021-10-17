@@ -9,7 +9,7 @@ Created on Tue Dec  4 11:39:31 2018
 
 import unittest
 
-from book_inventory import Inventory as library 
+from inventory import Inventory as library 
 
 #created my test class after importing my book_inventory.py
 

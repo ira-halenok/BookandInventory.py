@@ -7,44 +7,11 @@ Created on Tue Oct 16 13:05:30 2018
 
 
 import xml.etree.ElementTree as ETree
-import uuid as uuid_module
-
-class InventoryItem:
-    def __init__(self,name,uuid=None):
-        self.name = name
-        if uuid is None:
-            self.uuid = uuid_module.uuid4()
-        else:
-            self.uuid = uuid_module.UUID(uuid)
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return "InventoryItem({},{})".format(self.uuid,self.name)
-
-class Book(InventoryItem):
-    def __init__(self,title,author='',uuid=None):
-        if uuid is None:
-            super().__init__(title)
-        else:
-            super().__init__(title,uuid=uuid)
-        
-        self.title = title
-        self.author = author
-
-    def __str__(self):
-        if self.author == '':
-            return self.title
-        else:
-            return '{} by {}'.format(self.title,self.author)
-
-    def __eq__(self, other):
-        return (self.title, self.author) == (other.title, other.author)
-
+from book import InventoryItem, Book
+ 
 class Inventory:
-    def __init__(self):
-        self.inventory_items = []
+    def __init__(self,items):
+        self.inventory_items = items
 
     def add_item(self,item):
         if isinstance(item, InventoryItem):
@@ -56,6 +23,9 @@ class Inventory:
         for item in self.inventory_items:
             if item.uuid == item_uuid:
                 self.inventory_items.remove(item)
+
+    def search_by_author(self,author):
+        return [x for x in self.inventory_items if x.author == author]
 
     def get_xml_tree(self):
         # create etree
@@ -82,7 +52,7 @@ class Inventory:
     def load_from_xml(filename):
         inventory_tree = ETree.parse(filename)
         root = inventory_tree.getroot()
-        inventory = Inventory()
+        inventory = Inventory(items=[])
         for inventory_item in root:
             # check that our item type is Book
             # not necessary now, but it would be if we had more than one
@@ -101,4 +71,4 @@ class Inventory:
         return inventory
 
     def __str__(self):
-        return '\n'.join(str(item)for item in self.inventory_items)
+        return '\n'.join(str(item) for item in self.inventory_items)
